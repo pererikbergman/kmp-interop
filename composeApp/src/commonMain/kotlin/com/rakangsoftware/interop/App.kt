@@ -1,36 +1,49 @@
 package com.rakangsoftware.interop
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.Button
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import org.jetbrains.compose.resources.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import di.appModule
+import di.platformModule
 import org.jetbrains.compose.ui.tooling.preview.Preview
-
-import interop.composeapp.generated.resources.Res
-import interop.composeapp.generated.resources.compose_multiplatform
+import org.koin.compose.KoinApplication
+import org.koin.compose.koinInject
 
 @Composable
 @Preview
 fun App() {
-    MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
-        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
+    KoinApplication(application = {
+        modules(appModule, platformModule)
+    }) {
+        val service = koinInject<Service>()
+
+        // Remember the message state
+        var message by remember { mutableStateOf("Waiting for message...") }
+
+        // LaunchedEffect to call the service.onDone and update message
+        LaunchedEffect(Unit) {
+            service.onDone { result ->
+                message = result
             }
-            AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
-                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
-                }
+        }
+
+        // Displaying the message in a centered Text component
+        MaterialTheme {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = message,
+                    fontSize = 32.sp, // Set the font size to 32sp
+                    fontWeight = FontWeight.Bold // Optional: Make the text bold
+                )
             }
         }
     }
